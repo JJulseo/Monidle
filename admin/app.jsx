@@ -252,7 +252,7 @@ function Toast({ level, title, detail, action, onDismiss, avatarName }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fff', fontSize: 17, fontWeight: 700,
       }}>
-        {avatarName ? avatarName[0] : <Icon.Logo size={22} color="#fff"/>}
+        {avatarName ? avatarName[0] : <Icon.Check size={22} color="#fff"/>}
       </div>
 
       {/* Content */}
