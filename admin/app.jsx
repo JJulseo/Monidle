@@ -161,9 +161,6 @@ function App() {
     }}>
       <TopNav onLogoClick={goList}/>
 
-      {/* Critical danger flash overlay — pulses the entire window red when any patient is in danger */}
-      <DangerFlashOverlay/>
-
       <div style={{ flex: 1, display: 'flex', minHeight: 0, position: 'relative', zIndex: 1 }}>
         {view.screen === 'list' && (
           <PatientListScreen onSelectPatient={goHome}/>
@@ -261,53 +258,3 @@ function Toast({ level, title, detail, action, onDismiss }) {
 }
 
 Object.assign(window, { App });
-
-// ── Danger flash overlay ─────────────────────────────────
-// Pulses the entire workspace background red when ANY patient is in danger.
-// Subscribes to MonidleData so it activates the moment a patient escalates.
-function DangerFlashOverlay() {
-  const [, tick] = React.useReducer(x => x + 1, 0);
-  React.useEffect(() => window.MonidleData.subscribe(() => tick()), []);
-
-  const dangerCount = window.MonidleData.patients.filter(p => p.status === 'danger').length;
-  if (dangerCount === 0) return null;
-
-  const dangerNames = window.MonidleData.patients
-    .filter(p => p.status === 'danger').map(p => p.name).join(', ');
-
-  return (
-    <>
-      {/* full-window pulsing red wash — covers everything except sidebar/topnav via z-index */}
-      <div className="danger-flash-bg" aria-hidden="true" style={{
-        position: 'absolute', top: 56, left: 0, right: 0, bottom: 24,
-        pointerEvents: 'none', zIndex: 5,
-      }}/>
-      {/* persistent siren banner at top of work area */}
-      <div className="danger-siren-banner" style={{
-        position: 'absolute', top: 56, left: 0, right: 0,
-        zIndex: 50, pointerEvents: 'none',
-        display: 'flex', justifyContent: 'center',
-      }}>
-        <div style={{
-          marginTop: 12,
-          background: '#DC2626', color: '#fff',
-          padding: '10px 20px', borderRadius: 10,
-          display: 'flex', alignItems: 'center', gap: 12,
-          boxShadow: '0 8px 24px rgba(220,38,38,0.45), 0 0 0 4px rgba(220,38,38,0.18)',
-          fontWeight: 800, letterSpacing: '-0.01em',
-          pointerEvents: 'auto',
-        }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 22, height: 22, borderRadius: 999, background: 'rgba(255,255,255,0.2)',
-            fontSize: 14,
-          }} className="blink">⚠</span>
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.25 }}>
-            <span style={{ fontSize: 13.5 }}>위험 환자 {dangerCount}명 — 즉시 조치 필요</span>
-            <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.9 }}>{dangerNames}</span>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}

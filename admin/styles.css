@@ -139,28 +139,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--brand); out
   box-shadow: var(--sh-1);
 }
 
-/* ── Critical danger flash ───────────────────────────────
-   Pulses the entire workspace background red when any
-   patient is in danger. Strong but non-blocking. */
-@keyframes danger-flash {
-  0%, 100% {
-    background: rgba(220, 38, 38, 0.16);
-    box-shadow: inset 0 0 0 3px rgba(220, 38, 38, 0.55), inset 0 0 60px rgba(220, 38, 38, 0.18);
-  }
-  50% {
-    background: rgba(220, 38, 38, 0.04);
-    box-shadow: inset 0 0 0 3px rgba(220, 38, 38, 0.20), inset 0 0 30px rgba(220, 38, 38, 0.06);
-  }
+/* ── Danger row background blink ────────────────────────
+   Pulses only the at-risk patient row background red. */
+@keyframes row-danger-blink {
+  0%, 100% { background: rgba(254, 226, 226, 0.85); }
+  50%       { background: rgba(254, 202, 202, 0.55); }
 }
-.danger-flash-bg {
-  animation: danger-flash 1.1s ease-in-out infinite;
-  mix-blend-mode: multiply;
+.row-danger-blink {
+  animation: row-danger-blink 1.4s ease-in-out infinite;
 }
-
-@keyframes danger-banner-pop {
-  from { transform: translateY(-12px); opacity: 0; }
-  to   { transform: translateY(0);     opacity: 1; }
-}
-.danger-siren-banner > div {
-  animation: danger-banner-pop 280ms cubic-bezier(.2,.7,.2,1) both;
+.row-danger-blink:hover {
+  animation: none;
+  background: rgba(254, 202, 202, 0.75) !important;
 }
