@@ -208,9 +208,12 @@ function App() {
 function ToastStack({ toasts, onDismiss }) {
   return (
     <div style={{
-      position: 'absolute', bottom: 36, right: 20, zIndex: 200,
-      display: 'flex', flexDirection: 'column', gap: 14,
-      maxWidth: 570, pointerEvents: 'none',
+      position: 'absolute', top: 12, left: '50%',
+      transform: 'translateX(-50%)',
+      zIndex: 200,
+      display: 'flex', flexDirection: 'column', gap: 10,
+      width: 460,
+      pointerEvents: 'none',
     }}>
       {toasts.map(t => <Toast key={t.id} {...t} onDismiss={() => onDismiss(t.id)} />)}
     </div>
@@ -219,40 +222,59 @@ function ToastStack({ toasts, onDismiss }) {
 
 function Toast({ level, title, detail, action, onDismiss }) {
   const palette = {
-    danger:  { bg: '#FEF2F2', border: '#FECACA', accent: '#DC2626' },
-    warning: { bg: '#FFFBEB', border: '#FDE68A', accent: '#D97706' },
-    good:    { bg: '#F0FDF4', border: '#BBF7D0', accent: '#16A34A' },
-    info:    { bg: '#EFF6FF', border: '#BFDBFE', accent: '#2563EB' },
+    danger:  { accent: '#DC2626' },
+    warning: { accent: '#D97706' },
+    good:    { accent: '#16A34A' },
+    info:    { accent: '#2563EB' },
   }[level || 'info'];
 
   return (
     <div style={{
       pointerEvents: 'auto',
-      background: '#fff',
-      border: `1px solid ${palette.border}`,
-      borderLeft: `5px solid ${palette.accent}`,
-      borderRadius: 15,
-      padding: '17px 20px',
-      boxShadow: '0 12px 32px rgba(15,23,42,0.13), 0 2px 4px rgba(15,23,42,0.07)',
-      display: 'flex', flexDirection: 'column', gap: 6,
-      animation: 'toastIn .25s ease-out',
+      background: 'rgba(255,255,255,0.97)',
+      backdropFilter: 'blur(24px)',
+      WebkitBackdropFilter: 'blur(24px)',
+      border: '1px solid rgba(0,0,0,0.08)',
+      borderRadius: 20,
+      padding: '12px 14px',
+      boxShadow: '0 16px 48px rgba(15,23,42,0.18), 0 2px 8px rgba(15,23,42,0.08)',
+      display: 'flex', alignItems: 'flex-start', gap: 12,
+      animation: 'toastSlideDown .45s cubic-bezier(.2,.9,.2,1) both',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ fontSize: 19, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.01em' }}>{title}</div>
-        <button onClick={onDismiss} style={{
-          width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent',
-          color: '#94A3B8', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 0, marginTop: -1,
-        }}>×</button>
+      {/* App icon */}
+      <div style={{
+        width: 40, height: 40, borderRadius: 11, flexShrink: 0,
+        background: palette.accent,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon.Logo size={22} color="#fff"/>
       </div>
-      {detail && <div style={{ fontSize: 17, color: '#475569', lineHeight: 1.45 }}>{detail}</div>}
-      {action && (
-        <button onClick={action.onClick} style={{
-          marginTop: 6, alignSelf: 'flex-start',
-          padding: '8px 16px', borderRadius: 9, border: 'none',
-          background: palette.accent, color: '#fff',
-          fontSize: 17, fontWeight: 700, cursor: 'pointer', letterSpacing: '-0.01em',
-        }}>{action.label}</button>
-      )}
+
+      {/* Content */}
+      <div style={{ flex: 1, minWidth: 0, paddingTop: 1 }}>
+        <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.01em', lineHeight: 1.2 }}>
+          {title}
+        </div>
+        {detail && (
+          <div style={{ fontSize: 12, color: '#475569', marginTop: 3, lineHeight: 1.45 }}>{detail}</div>
+        )}
+        {action && (
+          <button onClick={action.onClick} style={{
+            marginTop: 8, padding: '5px 13px', borderRadius: 8, border: 'none',
+            background: palette.accent, color: '#fff',
+            fontSize: 12, fontWeight: 700, cursor: 'pointer', letterSpacing: '-0.01em',
+          }}>{action.label}</button>
+        )}
+      </div>
+
+      {/* Dismiss */}
+      <button onClick={onDismiss} style={{
+        width: 20, height: 20, borderRadius: 999, border: 'none',
+        background: 'rgba(0,0,0,0.08)', color: '#64748B',
+        cursor: 'pointer', fontSize: 13, lineHeight: 1,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        flexShrink: 0, padding: 0, marginTop: 1,
+      }}>×</button>
     </div>
   );
 }
