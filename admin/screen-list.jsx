@@ -248,6 +248,90 @@ function StatCard({ label, value, color, total }) {
   );
 }
 
+// ── Danger row helpers ─────────────────────────────────────────────────────
+function DangerChart({ data, threshold, color }) {
+  if (!data || data.length < 2) return null;
+  const VW = 400, VH = 96;
+  const pt = 18, pb = 6, pl = 4, pr = 8;
+  const cw = VW - pl - pr, ch = VH - pt - pb;
+
+  const maxVal = Math.max(...data);
+  const minVal = Math.min(...data, threshold * 0.8);
+  const range = Math.max(maxVal - minVal, 1);
+
+  const tx = i => pl + (i / (data.length - 1)) * cw;
+  const ty = v => pt + (1 - (v - minVal) / range) * ch;
+
+  const pts = data.map((v, i) => [tx(i), ty(v)]);
+  const linePath = pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join('');
+  const areaPath = `${linePath}L${pts[pts.length-1][0]},${VH-pb}L${pts[0][0]},${VH-pb}Z`;
+
+  const threshY = ty(threshold);
+  const maxIdx = data.indexOf(maxVal);
+  const maxPt = pts[maxIdx];
+  const lastPt = pts[pts.length - 1];
+
+  // Linear regression
+  const n = data.length;
+  const mX = (n - 1) / 2;
+  const mY = data.reduce((s, v) => s + v, 0) / n;
+  const num = data.reduce((s, v, i) => s + (i - mX) * (v - mY), 0);
+  const den = data.reduce((s, _, i) => s + (i - mX) ** 2, 0);
+  const slope = den ? num / den : 0;
+  const trendY0 = ty(mY - slope * mX);
+  const trendYn = ty(mY + slope * (n - 1 - mX));
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${VW} ${VH}`} style={{ display: 'block', overflow: 'visible' }}>
+      {/* Area fill */}
+      <path d={areaPath} fill={color} opacity="0.09"/>
+      {/* Threshold zone tint */}
+      <rect x={pl} y={pt} width={cw} height={Math.max(0, threshY - pt)} fill={color} opacity="0.05"/>
+      {/* Threshold line */}
+      <line x1={pl} y1={threshY} x2={VW-pr} y2={threshY}
+        stroke={color} strokeOpacity="0.55" strokeWidth="1.2" strokeDasharray="4,3"/>
+      <text x={VW-pr-2} y={threshY - 3} textAnchor="end"
+        fill={color} fontSize="10" opacity="0.75" fontWeight="600">임계</text>
+      {/* Trend line */}
+      <line x1={pl} y1={trendY0} x2={VW-pr} y2={trendYn}
+        stroke="#94A3B8" strokeWidth="1.5" strokeDasharray="5,4" opacity="0.7"/>
+      {/* Main data line */}
+      <path d={linePath} fill="none" stroke={color} strokeWidth="2.5"
+        strokeLinejoin="round" strokeLinecap="round"/>
+      {/* Max value dot (orange) — only if not the last point */}
+      {maxIdx !== data.length - 1 && (
+        <>
+          <circle cx={maxPt[0]} cy={maxPt[1]} r="4" fill="#F97316" stroke="#fff" strokeWidth="1.5"/>
+          <text x={maxPt[0]} y={maxPt[1] - 7} textAnchor="middle"
+            fill="#F97316" fontSize="13" fontWeight="700">
+            {maxVal.toFixed(0)}
+          </text>
+        </>
+      )}
+      {/* Current (last) point — pulsing glow ring + solid dot */}
+      <circle cx={lastPt[0]} cy={lastPt[1]} r="6" fill="none" stroke={color} strokeWidth="1.5" opacity="0.35">
+        <animate attributeName="r" values="6;14;6" dur="1.8s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.35;0;0.35" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx={lastPt[0]} cy={lastPt[1]} r="4.5" fill={color} stroke="#fff" strokeWidth="2">
+        <animate attributeName="r" values="4.5;5.5;4.5" dur="1.8s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+  );
+}
+
+function DangerStatChip({ label, value, unit, color }) {
+  return (
+    <div style={{ background: 'rgba(0,0,0,0.04)', borderRadius: 6, padding: '5px 8px' }}>
+      <div style={{ fontSize: 9, color: '#94A3B8', fontWeight: 600, letterSpacing: '0.03em', marginBottom: 2 }}>{label}</div>
+      <div className="tnum" style={{ fontSize: 12, fontWeight: 700, color, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 2 }}>
+        {value}
+        {unit && <span style={{ fontSize: 9, fontWeight: 400, color: '#94A3B8' }}>{unit}</span>}
+      </div>
+    </div>
+  );
+}
+
 function PatientRow({ patient, onClick, index }) {
   const s = window.STATUS[patient.status];
   const gfapBreached = patient.gfap.value > patient.gfap.threshold;
@@ -376,95 +460,77 @@ function PatientRow({ patient, onClick, index }) {
         {/* Expanded detail section */}
         <div style={{
           borderTop: '1px solid rgba(220,38,38,0.22)',
-          padding: '14px 18px 18px',
+          padding: '10px 18px 14px',
           display: 'grid',
           gridTemplateColumns: '1fr 1fr 1fr',
-          gap: 16,
+          gap: 12,
           background: 'rgba(254,242,242,0.45)',
         }}>
           {/* GFAP trend panel */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              GFAP 추세
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.06em' }}>GFAP 추세</span>
+              <span style={{ display: 'flex', gap: 8, fontSize: 9, color: '#94A3B8' }}>
+                <span><span style={{ color: '#F97316' }}>●</span> 최댓값</span>
+                <span style={{ color: '#94A3B8' }}>-- 추세선</span>
+              </span>
             </div>
-            <Sparkline data={gfapData} threshold={patient.gfap.threshold} color="#DC2626" w={200} h={64} fill={true}/>
-            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>현재값</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{patient.gfap.value.toFixed(1)}</div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL</div>
-              </div>
-              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>기준 초과</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{(patient.gfap.value / patient.gfap.threshold).toFixed(2)}×</div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>임계 {patient.gfap.threshold}</div>
-              </div>
-              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>변화율</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: patient.gfap.delta > 0 ? '#DC2626' : '#16A34A' }}>
-                  {patient.gfap.delta > 0 ? '+' : ''}{patient.gfap.delta.toFixed(1)}
-                </div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL/틱</div>
-              </div>
+            <DangerChart data={gfapData} threshold={patient.gfap.threshold} color="#DC2626"/>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, marginTop: 7 }}>
+              <DangerStatChip label="현재값" value={patient.gfap.value.toFixed(1)} unit=" pg/mL" color="#DC2626"/>
+              <DangerStatChip label="기준 초과" value={`${(patient.gfap.value / patient.gfap.threshold).toFixed(2)}×`} color="#DC2626"/>
+              <DangerStatChip label="변화율" value={`${patient.gfap.delta > 0 ? '+' : ''}${patient.gfap.delta.toFixed(1)}`} unit=" /틱" color={patient.gfap.delta > 0 ? '#DC2626' : '#16A34A'}/>
+              <DangerStatChip label="구간 최댓값" value={Math.max(...gfapData).toFixed(0)} unit=" pg/mL" color="#F97316"/>
             </div>
           </div>
 
           {/* UCH-L1 trend panel */}
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              UCH-L1 추세
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.06em' }}>UCH-L1 추세</span>
+              <span style={{ display: 'flex', gap: 8, fontSize: 9, color: '#94A3B8' }}>
+                <span><span style={{ color: '#F97316' }}>●</span> 최댓값</span>
+                <span style={{ color: '#94A3B8' }}>-- 추세선</span>
+              </span>
             </div>
-            <Sparkline data={uchl1Data} threshold={patient.uchl1.threshold} color="#B45309" w={200} h={64} fill={true}/>
-            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>현재값</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#B45309' }}>{patient.uchl1.value.toFixed(1)}</div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL</div>
-              </div>
-              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>기준 초과</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#B45309' }}>{(patient.uchl1.value / patient.uchl1.threshold).toFixed(2)}×</div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>임계 {patient.uchl1.threshold}</div>
-              </div>
-              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
-                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>변화율</div>
-                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: patient.uchl1.delta > 0 ? '#B45309' : '#16A34A' }}>
-                  {patient.uchl1.delta > 0 ? '+' : ''}{patient.uchl1.delta.toFixed(1)}
-                </div>
-                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL/틱</div>
-              </div>
+            <DangerChart data={uchl1Data} threshold={patient.uchl1.threshold} color="#B45309"/>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 5, marginTop: 7 }}>
+              <DangerStatChip label="현재값" value={patient.uchl1.value.toFixed(1)} unit=" pg/mL" color="#B45309"/>
+              <DangerStatChip label="기준 초과" value={`${(patient.uchl1.value / patient.uchl1.threshold).toFixed(2)}×`} color="#B45309"/>
+              <DangerStatChip label="변화율" value={`${patient.uchl1.delta > 0 ? '+' : ''}${patient.uchl1.delta.toFixed(1)}`} unit=" /틱" color={patient.uchl1.delta > 0 ? '#B45309' : '#16A34A'}/>
+              <DangerStatChip label="구간 최댓값" value={Math.max(...uchl1Data).toFixed(0)} unit=" pg/mL" color="#F97316"/>
             </div>
           </div>
 
           {/* AUC + patient details panel */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ background: 'rgba(220,38,38,0.08)', borderRadius: 8, padding: '8px 12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8' }}>누적 노출 (AUC)</span>
-                <span className="tnum" style={{ fontSize: 13, fontWeight: 700, color: '#DC2626' }}>{patient.auc.value.toLocaleString()} pg·h</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+            <div style={{ background: 'rgba(220,38,38,0.08)', borderRadius: 8, padding: '7px 10px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em' }}>누적 노출 (AUC)</span>
+                <span className="tnum" style={{ fontSize: 12, fontWeight: 700, color: '#DC2626' }}>{patient.auc.value.toLocaleString()} pg·h</span>
               </div>
-              <div style={{ height: 7, background: '#FECACA', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ height: 6, background: '#FECACA', borderRadius: 999, overflow: 'hidden' }}>
                 <div style={{ width: `${aucPct}%`, height: '100%', background: '#DC2626', borderRadius: 999 }}/>
               </div>
-              <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 600, marginTop: 4 }}>
+              <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 600, marginTop: 3 }}>
                 위험치의 {aucPct.toFixed(0)}% (기준 1,200 pg·h)
               </div>
             </div>
             {patient.memo && (
-              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '7px 10px', flex: 1, minHeight: 0 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
                   <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em' }}>담당의 메모</div>
                   {patient.memo.author && (
-                    <div style={{ fontSize: 10, color: '#94A3B8' }}>{patient.memo.author} · {patient.memo.time}</div>
+                    <div style={{ fontSize: 9, color: '#94A3B8' }}>{patient.memo.author} · {patient.memo.time}</div>
                   )}
                 </div>
-                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
                   {typeof patient.memo === 'string' ? patient.memo : patient.memo.text}
                 </div>
               </div>
             )}
             {patient.prescription && patient.prescription.length > 0 && (
-              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
+              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '7px 10px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: 4 }}>처방 현황</div>
                 {patient.prescription.slice(0, 3).map((rx, i) => (
                   <div key={i} style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
