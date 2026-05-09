@@ -19,10 +19,33 @@ function HomeScreen({ theme, density, graphStyle, sim, currentStatus, onOpenDeta
   const uchStatus = statusOf(uchNow, 'UCHL1');
   const aucStatus = statusOf(aucNow, 'AUC');
 
+  const elevatedMarkers = [
+    ...(gfapStatus !== 'good' ? ['GFAP'] : []),
+    ...(uchStatus !== 'good' ? ['UCH-L1'] : []),
+  ];
+  const dangerMarkers = [
+    ...(gfapStatus === 'danger' ? ['GFAP'] : []),
+    ...(uchStatus === 'danger' ? ['UCH-L1'] : []),
+  ];
+  const warnMarkerStr  = elevatedMarkers.length > 0 ? elevatedMarkers.join(', ') : 'GFAP, UCH-L1';
+  const dangerMarkerStr = dangerMarkers.length > 0 ? dangerMarkers.join(', ') : warnMarkerStr;
+
   const statusMeta = {
-    good: { ko: '안정', msg: '뇌 회복이 순조롭게 진행되고 있어요.', color: theme.good, soft: theme.goodSoft },
-    warn: { ko: '주의', msg: 'UCH-L1이 일시적으로 상승했어요. 휴식을 권장해요.', color: theme.warn, soft: theme.warnSoft },
-    danger: { ko: '위험', msg: '담당의에게 즉시 연락이 필요해요.', color: theme.danger, soft: theme.dangerSoft },
+    good: {
+      ko: '안정',
+      msg: '뇌 건강 지수가 안정적이며 건강한 상태입니다.',
+      color: theme.good, soft: theme.goodSoft,
+    },
+    warn: {
+      ko: '주의',
+      msg: `${warnMarkerStr} 농도가 기준치보다 높아 집중 관리가 필요합니다.`,
+      color: theme.warn, soft: theme.warnSoft,
+    },
+    danger: {
+      ko: '위험',
+      msg: `${dangerMarkerStr} 농도가 임계점을 초과했습니다. 즉시 의료진에게 연락이 필수적입니다.`,
+      color: theme.danger, soft: theme.dangerSoft,
+    },
   }[overallStatus];
 
   const metrics = {
