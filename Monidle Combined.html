@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Monidle — 환자 + Admin</title>
+<style>
+  @font-face {
+    font-family: 'Brice SemiExpanded';
+    src: url('fonts/Brice-Regular-SemiExpanded.otf') format('opentype');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  html, body {
+    margin: 0; padding: 0;
+    width: 100%; height: 100%;
+    background: #000;
+    font-family: 'Pretendard', -apple-system, "SF Pro Display", system-ui, sans-serif;
+    color: #E5E7EB;
+    overflow: hidden;
+  }
+
+  /* Top header bar */
+  .toolbar {
+    position: fixed;
+    top: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 14px;
+    padding: 8px 16px;
+    background: rgba(20, 20, 20, 0.85);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    z-index: 100;
+  }
+  .toolbar .brand {
+    font-family: 'Brice SemiExpanded', -apple-system, system-ui, sans-serif;
+    font-size: 17px; color: #FF4D3F; letter-spacing: -0.01em;
+  }
+  .toolbar .sep { width: 1px; height: 14px; background: rgba(255,255,255,0.15); }
+  .toolbar .label {
+    font-size: 11px; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase;
+    font-weight: 600;
+  }
+  .toolbar .pill {
+    font-size: 11px; padding: 3px 10px; border-radius: 999px;
+    background: rgba(255,77,63,0.16); color: #FF7B70;
+    font-weight: 600; letter-spacing: 0.04em;
+    border: 1px solid rgba(255,77,63,0.25);
+  }
+
+  #stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  #pane {
+    display: flex;
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .col {
+    display: flex; flex-direction: column; gap: 12px;
+    align-items: stretch;
+  }
+  .col-label {
+    font-size: 11px; color: #94A3B8; letter-spacing: 0.16em; text-transform: uppercase;
+    font-weight: 600;
+    display: flex; align-items: center; gap: 8px;
+    height: 14px;
+    flex-shrink: 0;
+  }
+  .col-label .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+  .col-patient .col-label .dot { background: #22C55E; box-shadow: 0 0 8px #22C55E; }
+  .col-admin   .col-label .dot { background: #FF4D3F; box-shadow: 0 0 8px #FF4D3F; }
+
+  /* Patient iframe — already includes its own iOS phone frame on a #1a1a1a bg */
+  .patient-host {
+    width: 460px;
+    height: 920px;
+    overflow: hidden;
+    background: #000;
+  }
+  .patient-host iframe {
+    width: 100%; height: 100%; border: 0; background: #000;
+    display: block;
+  }
+
+  /* Admin iframe — already includes its own mac window chrome */
+  .admin-host {
+    width: 1180px;
+    height: 920px;
+    overflow: hidden;
+    border-radius: 14px;
+    background: #000;
+  }
+  .admin-host iframe {
+    width: 100%; height: 100%; border: 0; background: #000;
+    display: block;
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <span class="brand">Monidle</span>
+    <span class="sep"></span>
+    <span class="label">환자–의사 연동 시뮬레이션</span>
+    <span class="sep"></span>
+    <span class="pill">김민재 · PT-0042</span>
+  </div>
+
+  <div id="stage">
+    <div id="pane">
+      <div class="col col-patient">
+        <div class="col-label"><span class="dot"></span>환자 앱 · iOS</div>
+        <div class="patient-host">
+          <iframe id="patient-iframe" src="patient/Monidle.html?embed=1" title="Patient app"></iframe>
+        </div>
+      </div>
+
+      <div class="col col-admin">
+        <div class="col-label"><span class="dot"></span>Admin 콘솔 · 의료진</div>
+        <div class="admin-host">
+          <iframe id="admin-iframe" src="admin/Monidle Admin.html?embed=1" title="Admin console"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Auto-fit
+    function fit() {
+      const pane = document.getElementById('pane');
+      const designW = 1700;
+      const designH = 1020;
+      const sx = window.innerWidth / designW;
+      const sy = window.innerHeight / designH;
+      const s = Math.min(sx, sy, 1);
+      pane.style.transform = `scale(${s})`;
+      pane.style.transformOrigin = 'center center';
+    }
+    window.addEventListener('resize', fit);
+    fit();
+
+    // ── Cross-iframe message bridge ──
+    // Patient iframe → window.parent (this) → Admin iframe (relay all messages)
+    // Admin iframe → window.parent (this) → Patient iframe
+    const patientFrame = document.getElementById('patient-iframe');
+    const adminFrame = document.getElementById('admin-iframe');
+
+    window.addEventListener('message', (e) => {
+      const m = e.data;
+      if (!m || typeof m !== 'object') return;
+
+      // Patient broadcasts → relay to admin
+      if (m.source === 'monidle-patient') {
+        try { adminFrame.contentWindow.postMessage(m, '*'); } catch (err) {}
+      }
+      // Admin broadcasts → relay to patient (and convert target if needed)
+      if (m.source === 'monidle-admin') {
+        // Repackage with target=monidle-patient so the patient handler accepts it
+        const forward = { ...m, target: 'monidle-patient' };
+        try { patientFrame.contentWindow.postMessage(forward, '*'); } catch (err) {}
+      }
+    });
+    // ── Other-patient drift sim ──
+    // Once admin iframe is ready and MonidleData exists, inject a small
+    // wobble loop so non-김민재 patients don't look frozen.
+    function startDriftSim() {
+      const win = adminFrame.contentWindow;
+      if (!win || !win.MonidleData || !win.MonidleData.patients) {
+        return setTimeout(startDriftSim, 400);
+      }
+      const D = win.MonidleData;
+      const rng = (seed => () => (seed = (seed * 9301 + 49297) % 233280) / 233280)(7);
+
+      setInterval(() => {
+        let mutated = false;
+        for (const p of D.patients) {
+          if (p.id === 'PT-0042') continue; // 김민재 driven by patient app
+          // Drift size scales with status
+          const scale = p.status === 'warning' ? 1 : 0.35;
+          // GFAP small wobble (±3%)
+          const gJitter = (rng() - 0.5) * 2 * 0.03 * p.gfap.baseline * scale;
+          const uJitter = (rng() - 0.5) * 2 * 0.03 * p.uchl1.baseline * scale;
+          const aJitter = (rng() - 0.5) * 2 * 0.04 * (p.auc.value || 80) * scale;
+          const newG = Math.max(2, p.gfap.value + gJitter);
+          const newU = Math.max(20, p.uchl1.value + uJitter);
+          const newA = Math.max(10, (p.auc.value || 80) + aJitter);
+          p.gfap.delta  = +(newG - p.gfap.value).toFixed(2);
+          p.uchl1.delta = +(newU - p.uchl1.value).toFixed(2);
+          p.gfap.value  = +newG.toFixed(2);
+          p.uchl1.value = +newU.toFixed(2);
+          p.auc.value   = Math.round(newA);
+          // Refresh lastUpdate occasionally
+          if (rng() < 0.25) p.lastUpdate = '방금 전';
+          mutated = true;
+        }
+        if (mutated && D.notify) D.notify();
+      }, 1500);
+    }
+    adminFrame.addEventListener('load', startDriftSim);
+  </script>
+</body>
+</html>
