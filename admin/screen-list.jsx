@@ -249,20 +249,224 @@ function PatientRow({ patient, onClick, index }) {
   const aucPct = Math.min(100, (patient.auc.value / patient.auc.danger) * 100);
   const isDanger = patient.status === 'danger';
 
-  // simple deterministic spark from baseline → current
-  const spark = (baseline, current, breached, seed) => {
+  const synth = (baseline, current, seed) => {
     const arr = [];
-    let v = baseline;
-    const target = current;
     for (let i = 0; i < 24; i++) {
       const t = i / 23;
-      v = baseline + (target - baseline) * Math.pow(t, 1.4)
-        + Math.sin(seed + i) * (current * 0.025);
-      arr.push(v);
+      arr.push(baseline + (current - baseline) * Math.pow(t, 1.4)
+        + Math.sin(seed + i) * (current * 0.025));
     }
     return arr;
   };
 
+  const getSeries = (marker, seed) => {
+    if (window.MonidleData.seriesFor) {
+      const raw = window.MonidleData.seriesFor(patient.id, marker);
+      if (raw && raw.length) return isDanger ? raw.slice(-72) : raw.slice(-24);
+    }
+    const bio = patient[marker === 'gfap' ? 'gfap' : 'uchl1'];
+    return synth(bio.baseline, bio.value, seed);
+  };
+
+  const gfapData  = getSeries('gfap',  index * 3);
+  const uchl1Data = getSeries('uchl1', index * 5 + 1);
+
+  // ── Danger row: expanded card with larger charts and extra detail ──
+  if (isDanger) {
+    return (
+      <div
+        onClick={onClick}
+        className="row-hover row-danger-blink"
+        style={{
+          borderTop: '1px solid #FECACA',
+          borderLeft: '6px solid #DC2626',
+          cursor: 'pointer',
+          position: 'relative',
+        }}
+      >
+        {/* Top section — aligned to table header columns */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '88px 1.5fr 1.6fr 1.6fr 1fr 100px 76px',
+          alignItems: 'center',
+          gap: 8,
+          padding: '14px 18px',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <StatusPill status="danger" size="sm"/>
+            <div className="blink" style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', letterSpacing: '0.03em' }}>
+              ⚠ 즉시 조치
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 8, background: s.bg2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: s.fg, fontSize: 13, fontWeight: 700, flexShrink: 0,
+            }} className="pulse-danger">
+              {patient.name[0]}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#DC2626', letterSpacing: '-0.01em' }}>{patient.name}</span>
+                <span className="tnum" style={{ fontFamily: 'var(--mono)', fontSize: 11, color: '#94A3B8' }}>{patient.id}</span>
+              </div>
+              <div style={{ fontSize: 11, color: '#475569', marginTop: 2, whiteSpace: 'nowrap' }}>
+                {patient.sex}/{patient.age} · {patient.room || '신경외과'}
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ width: 78, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span className="tnum" style={{ fontSize: 15, fontWeight: 700, color: '#DC2626' }}>{patient.gfap.value.toFixed(1)}</span>
+                <Delta value={patient.gfap.delta} color="#DC2626"/>
+              </div>
+              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 1, whiteSpace: 'nowrap' }}>
+                기준 {patient.gfap.threshold} · {(patient.gfap.value / patient.gfap.threshold).toFixed(2)}×
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Sparkline data={gfapData.slice(-24)} threshold={patient.gfap.threshold} color="#DC2626"/>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, overflow: 'hidden' }}>
+            <div style={{ width: 78, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+                <span className="tnum" style={{ fontSize: 15, fontWeight: 700, color: '#DC2626' }}>{patient.uchl1.value.toFixed(1)}</span>
+                <Delta value={patient.uchl1.delta} color="#DC2626"/>
+              </div>
+              <div style={{ fontSize: 10, color: '#94A3B8', marginTop: 1, whiteSpace: 'nowrap' }}>
+                기준 {patient.uchl1.threshold} · {(patient.uchl1.value / patient.uchl1.threshold).toFixed(2)}×
+              </div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Sparkline data={uchl1Data.slice(-24)} threshold={patient.uchl1.threshold} color="#DC2626"/>
+            </div>
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+              <span className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{patient.auc.value.toLocaleString()}</span>
+              <span style={{ fontSize: 10, color: '#94A3B8' }}>/ 1,200</span>
+            </div>
+            <div style={{ width: 92, height: 5, background: '#FECACA', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{ width: `${aucPct}%`, height: '100%', background: '#DC2626', borderRadius: 999 }}/>
+            </div>
+          </div>
+
+          <ConnectionIndicator connected={patient.connected}/>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}>{patient.lastUpdate}</span>
+            <Icon.Chevron size={12} color="#DC2626"/>
+          </div>
+        </div>
+
+        {/* Expanded detail section */}
+        <div style={{
+          borderTop: '1px solid rgba(220,38,38,0.22)',
+          padding: '14px 18px 18px',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr 1fr',
+          gap: 16,
+          background: 'rgba(254,242,242,0.45)',
+        }}>
+          {/* GFAP trend panel */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
+              GFAP 추세 (72 포인트)
+            </div>
+            <Sparkline data={gfapData} threshold={patient.gfap.threshold} color="#DC2626" w={200} h={64} fill={true}/>
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>현재값</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{patient.gfap.value.toFixed(1)}</div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>기준 초과</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#DC2626' }}>{(patient.gfap.value / patient.gfap.threshold).toFixed(2)}×</div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>임계 {patient.gfap.threshold}</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(220,38,38,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>변화율</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: patient.gfap.delta > 0 ? '#DC2626' : '#16A34A' }}>
+                  {patient.gfap.delta > 0 ? '+' : ''}{patient.gfap.delta.toFixed(1)}
+                </div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL/틱</div>
+              </div>
+            </div>
+          </div>
+
+          {/* UCH-L1 trend panel */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
+              UCH-L1 추세 (72 포인트)
+            </div>
+            <Sparkline data={uchl1Data} threshold={patient.uchl1.threshold} color="#B45309" w={200} h={64} fill={true}/>
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>현재값</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#B45309' }}>{patient.uchl1.value.toFixed(1)}</div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>기준 초과</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: '#B45309' }}>{(patient.uchl1.value / patient.uchl1.threshold).toFixed(2)}×</div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>임계 {patient.uchl1.threshold}</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(180,83,9,0.08)', borderRadius: 6, padding: '6px 10px' }}>
+                <div style={{ fontSize: 10, color: '#94A3B8', marginBottom: 2 }}>변화율</div>
+                <div className="tnum" style={{ fontSize: 14, fontWeight: 700, color: patient.uchl1.delta > 0 ? '#B45309' : '#16A34A' }}>
+                  {patient.uchl1.delta > 0 ? '+' : ''}{patient.uchl1.delta.toFixed(1)}
+                </div>
+                <div style={{ fontSize: 9, color: '#94A3B8' }}>pg/mL/틱</div>
+              </div>
+            </div>
+          </div>
+
+          {/* AUC + patient details panel */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ background: 'rgba(220,38,38,0.08)', borderRadius: 8, padding: '8px 12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: '#94A3B8' }}>누적 노출 (AUC)</span>
+                <span className="tnum" style={{ fontSize: 13, fontWeight: 700, color: '#DC2626' }}>{patient.auc.value.toLocaleString()} pg·h</span>
+              </div>
+              <div style={{ height: 7, background: '#FECACA', borderRadius: 999, overflow: 'hidden' }}>
+                <div style={{ width: `${aucPct}%`, height: '100%', background: '#DC2626', borderRadius: 999 }}/>
+              </div>
+              <div style={{ fontSize: 10, color: '#DC2626', fontWeight: 600, marginTop: 4 }}>
+                위험치의 {aucPct.toFixed(0)}% (기준 1,200 pg·h)
+              </div>
+            </div>
+            {patient.memo && (
+              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: 4 }}>담당의 메모</div>
+                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>{patient.memo}</div>
+              </div>
+            )}
+            {patient.prescription && patient.prescription.length > 0 && (
+              <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: 4 }}>처방 현황</div>
+                {patient.prescription.slice(0, 3).map((rx, i) => (
+                  <div key={i} style={{ fontSize: 11, color: '#475569', display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+                    <span style={{ width: 4, height: 4, borderRadius: 999, background: '#DC2626', display: 'inline-block', flexShrink: 0 }}/>
+                    {rx}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Normal (warning / good) row ──────────────────────────────────
   return (
     <div
       onClick={onClick}
@@ -289,8 +493,7 @@ function PatientRow({ patient, onClick, index }) {
           width: 36, height: 36, borderRadius: 8, background: s.bg2,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           color: s.fg, fontSize: 13, fontWeight: 700, flexShrink: 0,
-          position: 'relative',
-        }} className={isDanger ? 'pulse-danger' : ''}>
+        }}>
           {patient.name[0]}
         </div>
         <div style={{ minWidth: 0 }}>
@@ -318,11 +521,7 @@ function PatientRow({ patient, onClick, index }) {
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Sparkline
-            data={spark(patient.gfap.baseline, patient.gfap.value, gfapBreached, index * 3)}
-            threshold={patient.gfap.threshold}
-            color={gfapBreached ? '#DC2626' : (patient.gfap.delta > 5 ? '#D97706' : '#0E5FB5')}
-          />
+          <Sparkline data={gfapData} threshold={patient.gfap.threshold} color={gfapBreached ? '#DC2626' : (patient.gfap.delta > 5 ? '#D97706' : '#0E5FB5')}/>
         </div>
       </div>
 
@@ -340,11 +539,7 @@ function PatientRow({ patient, onClick, index }) {
           </div>
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <Sparkline
-            data={spark(patient.uchl1.baseline, patient.uchl1.value, uchl1Breached, index * 5 + 1)}
-            threshold={patient.uchl1.threshold}
-            color={uchl1Breached ? '#DC2626' : (patient.uchl1.delta > 4 ? '#D97706' : '#0E5FB5')}
-          />
+          <Sparkline data={uchl1Data} threshold={patient.uchl1.threshold} color={uchl1Breached ? '#DC2626' : (patient.uchl1.delta > 4 ? '#D97706' : '#0E5FB5')}/>
         </div>
       </div>
 
