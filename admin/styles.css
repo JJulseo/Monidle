@@ -139,16 +139,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--brand); out
   box-shadow: var(--sh-1);
 }
 
-/* ── Danger row background blink ────────────────────────
-   Pulses only the at-risk patient row background red. */
-@keyframes row-danger-blink {
-  0%, 100% { background: rgba(254, 226, 226, 0.85); }
-  50%       { background: rgba(254, 202, 202, 0.55); }
-}
-.row-danger-blink {
-  animation: row-danger-blink 1.4s ease-in-out infinite;
-}
-.row-danger-blink:hover {
-  animation: none;
-  background: rgba(254, 202, 202, 0.75) !important;
+/* ── Danger table background blink ──────────────────────
+   Pulses the patient table area background when any patient is in danger. */
+@keyframes table-danger-blink {
+  0%, 100% { background: rgba(254, 242, 242, 0.45); }
+  50%       { background: rgb(254, 254, 254); }
 }

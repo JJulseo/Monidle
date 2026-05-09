@@ -87,7 +87,13 @@ function PatientListScreen({ onSelectPatient }) {
       </aside>
 
       {/* Main: patient table */}
-      <main className="scroll page-enter" style={{ flex: 1, overflow: 'auto', padding: '20px 28px 40px' }}>
+      <main
+        className="scroll page-enter"
+        style={{
+          flex: 1, overflow: 'auto', padding: '20px 28px 40px',
+          ...(counts.danger > 0 ? { animation: 'table-danger-blink 1.4s ease-in-out infinite' } : {}),
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>환자 모니터링</h1>
@@ -276,10 +282,11 @@ function PatientRow({ patient, onClick, index }) {
     return (
       <div
         onClick={onClick}
-        className="row-hover row-danger-blink"
+        className="row-hover"
         style={{
           borderTop: '1px solid #FECACA',
-          borderLeft: '6px solid #DC2626',
+          borderLeft: '3px solid #DC2626',
+          background: '#fff',
           cursor: 'pointer',
           position: 'relative',
         }}
@@ -292,7 +299,7 @@ function PatientRow({ patient, onClick, index }) {
           gap: 8,
           padding: '14px 18px',
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
             <StatusPill status="danger" size="sm"/>
             <div className="blink" style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', letterSpacing: '0.03em' }}>
               ⚠ 즉시 조치
@@ -378,7 +385,7 @@ function PatientRow({ patient, onClick, index }) {
           {/* GFAP trend panel */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              GFAP 추세 (72 포인트)
+              GFAP 추세
             </div>
             <Sparkline data={gfapData} threshold={patient.gfap.threshold} color="#DC2626" w={200} h={64} fill={true}/>
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -405,7 +412,7 @@ function PatientRow({ patient, onClick, index }) {
           {/* UCH-L1 trend panel */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              UCH-L1 추세 (72 포인트)
+              UCH-L1 추세
             </div>
             <Sparkline data={uchl1Data} threshold={patient.uchl1.threshold} color="#B45309" w={200} h={64} fill={true}/>
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -445,8 +452,15 @@ function PatientRow({ patient, onClick, index }) {
             </div>
             {patient.memo && (
               <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: 4 }}>담당의 메모</div>
-                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>{patient.memo}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em' }}>담당의 메모</div>
+                  {patient.memo.author && (
+                    <div style={{ fontSize: 10, color: '#94A3B8' }}>{patient.memo.author} · {patient.memo.time}</div>
+                  )}
+                </div>
+                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>
+                  {typeof patient.memo === 'string' ? patient.memo : patient.memo.text}
+                </div>
               </div>
             )}
             {patient.prescription && patient.prescription.length > 0 && (
