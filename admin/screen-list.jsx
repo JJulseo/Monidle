@@ -285,7 +285,7 @@ function PatientRow({ patient, onClick, index }) {
         className="row-hover"
         style={{
           borderTop: '1px solid #FECACA',
-          borderLeft: '6px solid #DC2626',
+          borderLeft: '3px solid #DC2626',
           background: '#fff',
           cursor: 'pointer',
           position: 'relative',
@@ -385,7 +385,7 @@ function PatientRow({ patient, onClick, index }) {
           {/* GFAP trend panel */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              GFAP 추세 (72 포인트)
+              GFAP 추세
             </div>
             <Sparkline data={gfapData} threshold={patient.gfap.threshold} color="#DC2626" w={200} h={64} fill={true}/>
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
@@ -412,7 +412,7 @@ function PatientRow({ patient, onClick, index }) {
           {/* UCH-L1 trend panel */}
           <div>
             <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.05em', marginBottom: 8 }}>
-              UCH-L1 추세 (72 포인트)
+              UCH-L1 추세
             </div>
             <Sparkline data={uchl1Data} threshold={patient.uchl1.threshold} color="#B45309" w={200} h={64} fill={true}/>
             <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
