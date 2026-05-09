@@ -445,8 +445,15 @@ function PatientRow({ patient, onClick, index }) {
             </div>
             {patient.memo && (
               <div style={{ background: '#fff', border: '1px solid #FECACA', borderRadius: 8, padding: '8px 12px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em', marginBottom: 4 }}>담당의 메모</div>
-                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>{patient.memo}</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', letterSpacing: '0.04em' }}>담당의 메모</div>
+                  {patient.memo.author && (
+                    <div style={{ fontSize: 10, color: '#94A3B8' }}>{patient.memo.author} · {patient.memo.time}</div>
+                  )}
+                </div>
+                <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.5 }}>
+                  {typeof patient.memo === 'string' ? patient.memo : patient.memo.text}
+                </div>
               </div>
             )}
             {patient.prescription && patient.prescription.length > 0 && (
