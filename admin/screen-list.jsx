@@ -87,7 +87,13 @@ function PatientListScreen({ onSelectPatient }) {
       </aside>
 
       {/* Main: patient table */}
-      <main className="scroll page-enter" style={{ flex: 1, overflow: 'auto', padding: '20px 28px 40px' }}>
+      <main
+        className="scroll page-enter"
+        style={{
+          flex: 1, overflow: 'auto', padding: '20px 28px 40px',
+          ...(counts.danger > 0 ? { animation: 'table-danger-blink 1.4s ease-in-out infinite' } : {}),
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
           <div>
             <h1 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em' }}>환자 모니터링</h1>
@@ -276,10 +282,11 @@ function PatientRow({ patient, onClick, index }) {
     return (
       <div
         onClick={onClick}
-        className="row-hover row-danger-blink"
+        className="row-hover"
         style={{
           borderTop: '1px solid #FECACA',
           borderLeft: '6px solid #DC2626',
+          background: '#fff',
           cursor: 'pointer',
           position: 'relative',
         }}
