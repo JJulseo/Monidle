@@ -299,7 +299,7 @@ function PatientRow({ patient, onClick, index }) {
           gap: 8,
           padding: '14px 18px',
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
             <StatusPill status="danger" size="sm"/>
             <div className="blink" style={{ fontSize: 10, fontWeight: 700, color: '#DC2626', letterSpacing: '0.03em' }}>
               ⚠ 즉시 조치
