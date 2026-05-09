@@ -208,9 +208,9 @@ function App() {
 function ToastStack({ toasts, onDismiss }) {
   return (
     <div style={{
-      position: 'absolute', top: 70, right: 20, zIndex: 200,
-      display: 'flex', flexDirection: 'column', gap: 10,
-      maxWidth: 380, pointerEvents: 'none',
+      position: 'absolute', bottom: 36, right: 20, zIndex: 200,
+      display: 'flex', flexDirection: 'column', gap: 14,
+      maxWidth: 570, pointerEvents: 'none',
     }}>
       {toasts.map(t => <Toast key={t.id} {...t} onDismiss={() => onDismiss(t.id)} />)}
     </div>
@@ -230,27 +230,27 @@ function Toast({ level, title, detail, action, onDismiss }) {
       pointerEvents: 'auto',
       background: '#fff',
       border: `1px solid ${palette.border}`,
-      borderLeft: `3px solid ${palette.accent}`,
-      borderRadius: 10,
-      padding: '11px 13px',
-      boxShadow: '0 8px 24px rgba(15,23,42,0.10), 0 1px 3px rgba(15,23,42,0.06)',
-      display: 'flex', flexDirection: 'column', gap: 4,
+      borderLeft: `5px solid ${palette.accent}`,
+      borderRadius: 15,
+      padding: '17px 20px',
+      boxShadow: '0 12px 32px rgba(15,23,42,0.13), 0 2px 4px rgba(15,23,42,0.07)',
+      display: 'flex', flexDirection: 'column', gap: 6,
       animation: 'toastIn .25s ease-out',
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.01em' }}>{title}</div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div style={{ fontSize: 19, fontWeight: 700, color: '#0F172A', letterSpacing: '-0.01em' }}>{title}</div>
         <button onClick={onDismiss} style={{
-          width: 18, height: 18, borderRadius: 4, border: 'none', background: 'transparent',
-          color: '#94A3B8', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: 0, marginTop: -2,
+          width: 26, height: 26, borderRadius: 6, border: 'none', background: 'transparent',
+          color: '#94A3B8', cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: 0, marginTop: -1,
         }}>×</button>
       </div>
-      {detail && <div style={{ fontSize: 11.5, color: '#475569', lineHeight: 1.45 }}>{detail}</div>}
+      {detail && <div style={{ fontSize: 17, color: '#475569', lineHeight: 1.45 }}>{detail}</div>}
       {action && (
         <button onClick={action.onClick} style={{
-          marginTop: 4, alignSelf: 'flex-start',
-          padding: '5px 11px', borderRadius: 6, border: 'none',
+          marginTop: 6, alignSelf: 'flex-start',
+          padding: '8px 16px', borderRadius: 9, border: 'none',
           background: palette.accent, color: '#fff',
-          fontSize: 11.5, fontWeight: 700, cursor: 'pointer', letterSpacing: '-0.01em',
+          fontSize: 17, fontWeight: 700, cursor: 'pointer', letterSpacing: '-0.01em',
         }}>{action.label}</button>
       )}
     </div>

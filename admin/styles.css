@@ -128,7 +128,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--brand); out
 .row-hover:hover { background: var(--bg-hover); }
 
 @keyframes toastIn {
-  from { transform: translateY(-8px); opacity: 0; }
+  from { transform: translateY(10px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
 }
 
