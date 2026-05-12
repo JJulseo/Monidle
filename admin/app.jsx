@@ -37,7 +37,7 @@ function App() {
     const id = Math.random().toString(36).slice(2);
     setToasts(t => [...t, { ...toast, id }]);
     if (toast.timeout !== 0) {
-      setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), toast.timeout || 5000);
+      setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), toast.timeout || 10000);
     }
   }, []);
 
@@ -85,6 +85,7 @@ function App() {
                 level: 'warning',
                 title: '김민재 환자 주의 상태 진입',
                 detail: `GFAP ${gfap.toFixed(1)} · UCH-L1 ${uch.toFixed(0)} · 임계값 접근`,
+                avatarName: target.name,
               });
             }
             if (adminStatus === 'danger' && lastStatus !== 'danger') {
@@ -92,6 +93,7 @@ function App() {
                 level: 'danger',
                 title: '김민재 환자 위험 상태 진입',
                 detail: `GFAP ${gfap.toFixed(1)} · UCH-L1 ${uch.toFixed(0)} · 임계값 초과`,
+                avatarName: target.name,
               });
             }
           }
@@ -107,7 +109,8 @@ function App() {
             level: 'danger',
             title: '🚨 김민재 환자 위험 알림',
             detail: 'GFAP / UCH-L1 위험 임계값 초과 — 응급 알림 화면 표시 중',
-            timeout: 8000,
+            timeout: 16000,
+            avatarName: target.name,
           });
         }
         if (modal !== 'emergency') emergencyAnnounced = false;
@@ -122,6 +125,7 @@ function App() {
           detail: '김민재 환자가 담당의 응급 연락 버튼을 눌렀습니다.',
           timeout: 0, // sticky
           action: { label: '응답하기', onClick: () => respondToEmergency(gfap, uch) },
+          avatarName: window.MonidleData.patients.find(p => p.id === 'PT-0042')?.name,
         });
       }
     };
@@ -220,7 +224,7 @@ function ToastStack({ toasts, onDismiss }) {
   );
 }
 
-function Toast({ level, title, detail, action, onDismiss }) {
+function Toast({ level, title, detail, action, onDismiss, avatarName }) {
   const palette = {
     danger:  { accent: '#DC2626' },
     warning: { accent: '#D97706' },
@@ -241,13 +245,14 @@ function Toast({ level, title, detail, action, onDismiss }) {
       display: 'flex', alignItems: 'flex-start', gap: 12,
       animation: 'toastSlideDown .45s cubic-bezier(.2,.9,.2,1) both',
     }}>
-      {/* App icon */}
+      {/* Patient avatar or app icon */}
       <div style={{
         width: 40, height: 40, borderRadius: 11, flexShrink: 0,
         background: palette.accent,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fff', fontSize: 17, fontWeight: 700,
       }}>
-        <Icon.Logo size={22} color="#fff"/>
+        {avatarName ? avatarName[0] : <Icon.Check size={22} color="#fff"/>}
       </div>
 
       {/* Content */}
