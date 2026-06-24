@@ -269,11 +269,7 @@ function PageHeader({ title, theme, right, sub, brand }) {
     <div style={{ padding: '4px 20px 8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
       <div>
         {brand ? (
-          <div className="monidle-brand" style={{
-            fontFamily: "'Brice SemiExpanded', -apple-system, system-ui, sans-serif",
-            color: '#FF4D3F',
-            fontSize: 32, fontWeight: 400, lineHeight: 1, letterSpacing: -0.3
-          }}>{title}</div>
+          <img src="../fonts/monidle-lockup-horizontal.svg" alt="Monidle" style={{ height: 30, display: 'block' }} />
         ) : (
           <div style={{ fontSize: 28, fontWeight: 700, color: theme.text, letterSpacing: -0.7, lineHeight: 1.1 }}>{title}</div>
         )}
