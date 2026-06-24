@@ -24,38 +24,10 @@
     overflow: hidden;
   }
 
-  /* Top header bar */
-  .toolbar {
-    position: fixed;
-    top: 14px; left: 50%; transform: translateX(-50%);
-    display: flex; align-items: center; gap: 14px;
-    padding: 8px 16px;
-    background: rgba(20, 20, 20, 0.85);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 999px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    z-index: 100;
-  }
-  .toolbar .brand {
-    font-family: 'Brice SemiExpanded', -apple-system, system-ui, sans-serif;
-    font-size: 17px; color: #FF4D3F; letter-spacing: -0.01em;
-  }
-  .toolbar .sep { width: 1px; height: 14px; background: rgba(255,255,255,0.15); }
-  .toolbar .label {
-    font-size: 11px; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase;
-    font-weight: 600;
-  }
-  .toolbar .pill {
-    font-size: 11px; padding: 3px 10px; border-radius: 999px;
-    background: rgba(255,77,63,0.16); color: #FF7B70;
-    font-weight: 600; letter-spacing: 0.04em;
-    border: 1px solid rgba(255,77,63,0.25);
-  }
-
   #stage {
     position: fixed; inset: 0;
     display: flex; align-items: center; justify-content: center;
+    background: #FFFFFF;
   }
 
   #pane {
@@ -65,21 +37,9 @@
   }
 
   .col {
-    display: flex; flex-direction: column; gap: 12px;
+    display: flex; flex-direction: column;
     align-items: stretch;
   }
-  .col-label {
-    font-size: 11px; color: #94A3B8; letter-spacing: 0.16em; text-transform: uppercase;
-    font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
-    height: 14px;
-    flex-shrink: 0;
-  }
-  .col-label .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-  }
-  .col-patient .col-label .dot { background: #22C55E; box-shadow: 0 0 8px #22C55E; }
-  .col-admin   .col-label .dot { background: #FF4D3F; box-shadow: 0 0 8px #FF4D3F; }
 
   /* Patient iframe — already includes its own iOS phone frame on a #1a1a1a bg */
   .patient-host {
@@ -108,27 +68,17 @@
 </style>
 </head>
 <body>
-  <div class="toolbar">
-    <span class="brand">Monidle</span>
-    <span class="sep"></span>
-    <span class="label">환자–의사 연동 시뮬레이션</span>
-    <span class="sep"></span>
-    <span class="pill">김민재 · PT-0042</span>
-  </div>
-
   <div id="stage">
     <div id="pane">
       <div class="col col-patient">
-        <div class="col-label"><span class="dot"></span>환자 앱 · iOS</div>
         <div class="patient-host">
           <iframe id="patient-iframe" src="patient/Monidle.html?embed=1" title="Patient app"></iframe>
         </div>
       </div>
 
       <div class="col col-admin">
-        <div class="col-label"><span class="dot"></span>Admin 콘솔 · 의료진</div>
         <div class="admin-host">
-          <iframe id="admin-iframe" src="admin/Monidle Admin.html?embed=1" title="Admin console"></iframe>
+          <iframe id="admin-iframe" src="admin/admin.html?embed=1" title="Admin console"></iframe>
         </div>
       </div>
     </div>
