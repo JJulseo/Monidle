@@ -7,11 +7,8 @@ function TopNav({ onLogoClick }) {
       display: 'flex', alignItems: 'center', padding: '0 20px', gap: 20, flexShrink: 0,
     }}>
       <div onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span className="monidle-brand" style={{
-            fontFamily: "'Brice SemiExpanded', -apple-system, system-ui, sans-serif",
-            fontSize: 22, fontWeight: 400, color: '#FF4D3F', letterSpacing: '-0.01em', lineHeight: 1,
-          }}>Monidle</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <img src="../fonts/monidle-lockup-horizontal.svg" alt="Monidle" style={{ height: 24, display: 'block' }} />
           <span style={{
             fontSize: 10, fontWeight: 700, color: '#FF4D3F', background: '#FFE8E5',
             padding: '3px 7px', borderRadius: 4, letterSpacing: '0.08em',
