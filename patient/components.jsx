@@ -269,7 +269,7 @@ function PageHeader({ title, theme, right, sub, brand }) {
     <div style={{ padding: '4px 20px 8px', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
       <div>
         {brand ? (
-          <img src="../fonts/monidle-lockup-horizontal.svg" alt="Monidle" style={{ height: 30, display: 'block' }} />
+          <img src="../fonts/monidle-lockup-horizontal%202.png" alt="Monidle" style={{ height: 30, display: 'block' }} />
         ) : (
           <div style={{ fontSize: 28, fontWeight: 700, color: theme.text, letterSpacing: -0.7, lineHeight: 1.1 }}>{title}</div>
         )}

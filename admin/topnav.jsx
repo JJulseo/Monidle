@@ -8,7 +8,7 @@ function TopNav({ onLogoClick }) {
     }}>
       <div onClick={onLogoClick} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src="../fonts/monidle-lockup-horizontal.svg" alt="Monidle" style={{ height: 24, display: 'block' }} />
+          <img src="../fonts/monidle-lockup-horizontal%202.png" alt="Monidle" style={{ height: 24, display: 'block' }} />
           <span style={{
             fontSize: 10, fontWeight: 700, color: '#FF4D3F', background: '#FFE8E5',
             padding: '3px 7px', borderRadius: 4, letterSpacing: '0.08em',
